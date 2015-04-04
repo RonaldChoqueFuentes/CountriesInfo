@@ -2,9 +2,15 @@ package bo.com.project.ronald.countriesinfo;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,14 +23,22 @@ import android.widget.ListView;
 
 import java.util.ArrayList;
 
+import bo.com.project.ronald.countriesinfo.data.ResultEntry;
+
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainPlaceholderFragment extends Fragment  {
+public class MainPlaceholderFragment extends Fragment  implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private static final String LOG_TAG = MainPlaceholderFragment.class.getSimpleName();
 
-   private ArrayAdapter arrayAdapter;
+    private ArrayAdapter arrayAdapter;
+
+
+    private static final int RESULT_LOADER = 0;
+
+    private ResultAdapter resultAdapter;
+
 
     public MainPlaceholderFragment() {
     }
@@ -41,6 +55,7 @@ public class MainPlaceholderFragment extends Fragment  {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
     }
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -63,40 +78,73 @@ public class MainPlaceholderFragment extends Fragment  {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        arrayAdapter = new ArrayAdapter<String>(getActivity(),
-                R.layout.results_view,
-                R.id.result_text_view,
-                new ArrayList<String>());
+        resultAdapter = new ResultAdapter(getActivity(), null, 0);
+
 
         ListView listView = (ListView)rootView.findViewById(R.id.result_list_view);
 
-        listView.setAdapter(arrayAdapter);
+        listView.setAdapter(resultAdapter);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+      /*  listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(getActivity(), DetailsActivity.class);
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+               Intent intent = new Intent(getActivity(), DetailsActivity.class);
 
-                String d1 = (String) arrayAdapter.getItem(position);
+                String d1 = (String) resultAdapter.getItem(position);
                 intent.putExtra(Intent.EXTRA_TEXT, d1);
                 startActivity(intent);
+
             }
-        });
+        });*/
 
 
         return rootView;
     }
 
-    private void updateResults() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String city = sharedPreferences.getString(getString(R.string.pref_query_key), getString(R.string.pref_Cochabamba_entry));
+    private void updateResults()
+    {
 
-        String fuzzy = sharedPreferences.getString(getString(R.string.pref_fuzzy_key), getString(R.string.pref_fuzzy_default));
+        String city = Util.getPreferredCity(this.getActivity());
+        String fuzzy = Util.getPreferredFuzzy(this.getActivity());
 
-        ResultTaskAsyn task = new ResultTaskAsyn(arrayAdapter);
+        FetchResultTask resultTask = new FetchResultTask(getActivity());
 
-        task.execute(city, fuzzy);
+
+        resultTask.execute(city, fuzzy);
     }
 
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        String citySetting = Util.getPreferredCity(getActivity());
+
+        String sortOrder = ResultEntry.COLUMN_COUNTRY_NAME + " DESC";
+
+        Uri resultForTeamUri = ResultEntry.buildCity(citySetting);
+
+        return new CursorLoader(getActivity(), resultForTeamUri, ResultAdapter.RESULT_COLUMNS, null, null, sortOrder);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        resultAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        resultAdapter.swapCursor(null);
+    }
+
+    public void onTeamChanged() {
+        updateResults();
+        getLoaderManager().restartLoader(RESULT_LOADER, null, this);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        getLoaderManager().initLoader(RESULT_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
 
 }

@@ -9,6 +9,9 @@ import android.view.MenuItem;
 
 public class MainActivity extends ActionBarActivity {
 
+    private final String LOG_TAG = MainActivity.class.getSimpleName();
+    private final String RESULT_FRAGMENT_TAG = "RF_TAG";
+    private String City = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +48,24 @@ public class MainActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        String c = Util.getPreferredCity(this);
+
+        if (c != null && c.trim() != "" && c.trim() != City) {
+
+            MainPlaceholderFragment fragment = (MainPlaceholderFragment)getSupportFragmentManager().findFragmentByTag(RESULT_FRAGMENT_TAG);
+
+            if (fragment != null)
+                fragment.onTeamChanged();
+
+            City = c;
+        }
+
     }
 
 }

@@ -24,13 +24,11 @@ public class ResultDbHelper extends SQLiteOpenHelper
 
         final String SQL_CREATE_LOCATION_TABLE = "CREATE TABLE " + ResultEntry.TABLE_NAME + " (" +
                 ResultEntry._ID + " INTEGER PRIMARY KEY," +
-                ResultEntry.COLUMN_HOME_TEAM + " TEXT NOT NULL," +
-                ResultEntry.COLUMN_AWAY_TEAM + " TEXT NOT NULL," +
-                ResultEntry.COLUMN_HOME_SCORE + " INTEGER NOT_NULL," +
-                ResultEntry.COLUMN_AWAY_SCORE + " INTEGER NOT_NULL," +
-                ResultEntry.COLUMN_MATCH_DATE + " INTEGER NOT_NULL," +
-                ResultEntry.COLUMN_TEAM_ID + " INTEGER NOT_NULL" +
+                ResultEntry.COLUMN_CITY_NAME + " TEXT NOT NULL," +
+                ResultEntry.COLUMN_COUNTRY_NAME + " TEXT NOT NULL," +
+                ResultEntry.COLUMN_POPULATION + " INTEGER NOT_NULL,"+
                 " );";
+
         db.execSQL(SQL_CREATE_LOCATION_TABLE);
     }
 
